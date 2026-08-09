@@ -60,6 +60,17 @@ private fun TwoPhaseImageGallery() {
     var rotaryRemainder by remember { mutableFloatStateOf(0f) }
     var lastImageReachedAt by remember { mutableLongStateOf(0L) }
 
+    if (phase == 3) {
+        ChaseGameScreen(
+            onCaught = {
+                phase = 1
+                virtualIndex = 0
+                rotaryRemainder = 0f
+            }
+        )
+        return
+    }
+
     val view = LocalView.current
     val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }
@@ -134,9 +145,13 @@ private fun TwoPhaseImageGallery() {
             .clickable(
                 enabled = isLastImage,
                 onClick = {
-                    phase = if (phase == 1) 2 else 1
-                    virtualIndex = 0
-                    rotaryRemainder = 0f
+                    if (phase == 1) {
+                        phase = 2
+                        virtualIndex = 0
+                        rotaryRemainder = 0f
+                    } else {
+                        phase = 3
+                    }
                 }
             ),
         contentAlignment = Alignment.Center
