@@ -1,6 +1,7 @@
 package com.tegeltech.werewolf.presentation
 
 import android.content.Context
+import android.app.NotificationManager
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -182,8 +183,19 @@ private const val ROTARY_PAUSE_AFTER_LAST_IMAGE_MS = 1000L
 private const val SHAKE_STEP_DURATION_MS = 50
 private val SHAKE_OFFSETS_PX = floatArrayOf(20f, -20f, 14f, -14f, 8f, -8f, 0f)
 
+// The howl is media playback, which ignores the watch's silent/vibrate and Do Not Disturb
+// settings, so honour them explicitly. This is the app's only "mute": no UI needed.
+private fun isSystemSilenced(context: Context): Boolean {
+    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    return audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL ||
+        notificationManager.currentInterruptionFilter != NotificationManager.INTERRUPTION_FILTER_ALL
+}
+
 // Plays through the watch's built-in speaker even if a Bluetooth audio device is connected.
+// Returns null (and stays silent) when the watch is in silent/vibrate or Do Not Disturb mode.
 private fun playHowl(context: Context, onCompletion: () -> Unit): MediaPlayer? {
+    if (isSystemSilenced(context)) return null
     val mediaPlayer = MediaPlayer.create(context, R.raw.howl) ?: return null
     val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     val builtInSpeaker = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
